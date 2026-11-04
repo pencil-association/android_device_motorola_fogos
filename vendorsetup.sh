@@ -97,3 +97,50 @@ if [ -d "$(gettop)/vendor/voltage" ]; then
         "$(gettop)/hardware/qcom-caf/common" \
         || echo "WARNING: caf-common patches failed" >&2
 fi
+
+# Patch Qualcomm audio HAL: prevent combo device (speaker-and-headphones) flapping on incoming calls
+echo "Applying Qualcomm audio HAL combo device flapping fix..."
+python3 - << 'EOF'
+import os
+import re
+
+def patch_audio_hw(fpath):
+    try:
+        with open(fpath, "r", encoding="utf-8", errors="ignore") as f:
+            content = f.read()
+    except Exception as e:
+        return
+
+    if "derive_playback_snd_device" not in content:
+        return
+
+    orig = content
+    # Case when platform_split_snd_device fails (< 0):
+    # SM6375 and shared WCD codec backends cannot split speaker-and-headphones into 2 backends.
+    # Instead of falling back to d2 (single device), preserve the combo device!
+    p1 = r'(if\s*\(ret\s*<\s*0\)\s*\{\s*if\s*\(ret\s*!=\s*-ENOSYS\)\s*\{\s*ALOGW\([^;]+;\s*\}\s*)ret\s*=\s*d2;\s*(goto\s+end;\s*\})'
+    # Case when backends match:
+    # Instead of unconditionally returning d2 (case 5), retain the combo device if already on combo (case 7).
+    p2 = r'(if\s*\(platform_check_backends_match\(d3\[0\],\s*d3\[1\]\)\)\s*\{\s*)ret\s*=\s*d2;\s*(goto\s+end;\s*//\s*case\s*5)'
+
+    repl = r'\1ret = (list_length(&a1) > 1 ? d1 : d2);\n            \2'
+    content = re.sub(p1, repl, content)
+    content = re.sub(p2, repl, content)
+
+    if content != orig:
+        with open(fpath, "w", encoding="utf-8") as f:
+            f.write(content)
+        print(f"[audio_hw_patch] Successfully patched {fpath}")
+    else:
+        if "list_length(&a1) > 1 ? d1 : d2" in content and "failed to split snd_device" in content:
+            print(f"[audio_hw_patch] {fpath} already patched")
+        else:
+            print(f"[audio_hw_patch] Pattern not found in {fpath}")
+
+for base in ["hardware", "vendor"]:
+    if os.path.exists(base):
+        for root, dirs, files in os.walk(base):
+            for file in files:
+                if file == "audio_hw.c":
+                    patch_audio_hw(os.path.join(root, file))
+EOF
