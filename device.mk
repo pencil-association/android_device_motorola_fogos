@@ -22,6 +22,9 @@ PRODUCT_SHIPPING_API_LEVEL := 33
 # Motorola Framework
 $(call inherit-product, $(LOCAL_PATH)/moto-framework/moto-framework.mk)
 
+# Motorola Camera
+$(call inherit-product, vendor/motorola/camera/camera.mk)
+
 # Permissions
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.telephony.euicc.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/permissions/android.hardware.telephony.euicc.xml
@@ -49,6 +52,7 @@ PRODUCT_PACKAGES += \
 
 # Camera
 $(call soong_config_set,libcameraservice,ext_lib,//$(LOCAL_PATH):libcameraservice_extension.fogos)
+$(call soong_config_set_bool,libcameraservice,ignore_shutter_order,true)
 PRODUCT_PACKAGES += libcamera2ndk_vendor
 
 # Audio
@@ -85,3 +89,5 @@ $(foreach f,$(wildcard $(LOCAL_PATH)/rootdir/bin/*.sh), \
     $(eval PRODUCT_COPY_FILES += $(f):$(TARGET_COPY_OUT_VENDOR)/bin/$(notdir $f)))
 
 $(call inherit-product, vendor/motorola/fogos/fogos-vendor.mk)
+
+DEVICE_PACKAGE_OVERLAYS += device/motorola/fogos/overlay-voltage
