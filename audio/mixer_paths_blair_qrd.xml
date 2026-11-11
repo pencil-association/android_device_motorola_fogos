@@ -263,9 +263,15 @@
         <path name="handset" />
     </path>
     <path name="voice-speaker">
+        <ctl name="AUX PATH Mode" value="HP_MODE" />
+        <ctl name="RX_MACRO RX2 MUX" value="AIF2_PB" />
         <ctl name="RX_MACRO RX3 MUX" value="AIF2_PB" />
+        <ctl name="RX INT0_1 MIX1 INP1" value="RX2" />
         <ctl name="RX INT2_1 MIX1 INP0" value="RX3" />
+        <ctl name="RX INT0 DEM MUX" value="CLSH_DSM_OUT" />
         <ctl name="AUX_RDAC Switch" value="1" />
+        <ctl name="EAR_RDAC Switch" value="1" />
+        <ctl name="RX_EAR Mode" value="ON" />
         <ctl name="RX HPH Mode" value="CLS_AB" />
         <ctl name="FSM_Scene" value="0" />
         <ctl name="FSM_Amp_Switch" value="On" />
