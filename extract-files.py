@@ -32,6 +32,15 @@ blob_fixups: blob_fixups_user_type = {
         .replace_needed('libsnsapi.so', 'libsnsapi-stock.so'),
     ('vendor/lib64/camera/components/com.mot.node.c2d.so', 'vendor/lib64/camera/components/com.qti.node.dewarp.so', 'vendor/lib64/camera/components/com.vidhance.node.ica.so', 'vendor/lib64/camera/components/com.vidhance.node.processing.so'): blob_fixup()
         .replace_needed('libui.so', 'libui-v34.so'),
+    # The 6.1 base DT registers the charger ADC channel as chg-skin-therm,
+    # so Moto's chg_therm zone never appears.
+    (
+        'vendor/etc/thermal-engine-fogos.conf',
+        'vendor/etc/thermal-engine-fogos-camera.conf',
+        'vendor/etc/thermal-engine-fogos-game-normal.conf',
+        'vendor/etc/thermal-engine-fogos-game-perf.conf',
+    ): blob_fixup()
+        .regex_replace(r'\bchg_therm\b', 'chg-skin-therm'),
 }  # fmt: skip
 
 module = ExtractUtilsModule(
