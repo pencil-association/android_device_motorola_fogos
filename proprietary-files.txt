@@ -408,7 +408,6 @@ vendor/etc/acdbdata/nn_ns_models/fai__2.6.3_0.0__3.0.0_0.0__eai_1.36_enpu2.pmd
 vendor/etc/acdbdata/nn_ns_models/fai__2.7.4_0.0__3.0.0_0.0__eai_1.10_enpu1.pmd
 vendor/etc/audio_io_policy.conf
 vendor/etc/audio_platform_info.xml
-vendor/etc/mixer_paths.xml
 vendor/etc/sound_trigger_mixer_paths.xml
 vendor/etc/sound_trigger_platform_info.xml
 vendor/lib64/libacdb-fts.so

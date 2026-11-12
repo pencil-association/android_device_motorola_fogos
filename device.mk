@@ -57,9 +57,10 @@ PRODUCT_PACKAGES += libcamera2ndk_vendor
 
 # Audio
 PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/audio/mixer_paths_blair_qrd.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio/sku_blair/mixer_paths_blair_qrd.xml \
+    $(LOCAL_PATH)/audio/mixer_paths.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio/sku_blair/mixer_paths.xml \
+    $(LOCAL_PATH)/audio/mixer_paths.xml:$(TARGET_COPY_OUT_VENDOR)/etc/mixer_paths.xml \
     vendor/motorola/fogos/proprietary/vendor/etc/audio_platform_info.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio/sku_blair/audio_platform_info_intcodec.xml
-$(foreach f,mixer_paths.xml audio_platform_info.xml audio_io_policy.conf, \
+$(foreach f,audio_platform_info.xml audio_io_policy.conf, \
     $(eval PRODUCT_COPY_FILES += vendor/motorola/fogos/proprietary/vendor/etc/$(f):$(TARGET_COPY_OUT_VENDOR)/etc/audio/sku_blair/$(f)))
 
 # Input

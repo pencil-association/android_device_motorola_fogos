@@ -1,5 +1,6 @@
 persist.vendor.audio.fluence.voicecomm=true
 persist.vendor.audio.stereo_speaker.spin.enable=true
+persist.vendor.audio.voicecall.speaker.stereo=true
 persist.vendor.camera.physical.num=3
 persist.vendor.sensors.enable.mag_filter=true
 persist.vendor.sensors.mot_tap=true
