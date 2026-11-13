@@ -26,6 +26,11 @@ blob_fixups: blob_fixups_user_type = {
         .replace_needed('libion.so', 'libion_qsecom_shim.so'),
     'vendor/lib64/camera/components/com.qti.node.gpu.so': blob_fixup()
         .call(fix_gpu_layout),
+    'vendor/lib64/libarcsoft_super_night_se_raw.so': blob_fixup()
+        .sig_replace(
+            'e0 03 14 aa 37 3d 01 94 f3 03 00 2a 20 01 00 34',
+            '94 01 00 b4 e0 03 14 aa 36 3d 01 94 09 00 00 14',
+        ),
     'vendor/lib64/libmot_chi_desktop_helper.so': blob_fixup()
         .add_needed('libgui_buffer_shim_vendor.so'),
     'vendor/lib64/hw/camera.qcom.so': blob_fixup()
