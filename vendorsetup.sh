@@ -98,6 +98,9 @@ if [ -d "$(gettop)/vendor/voltage" ]; then
         || echo "WARNING: caf-common patches failed" >&2
 fi
 
+# Replace upstream LineageOS FM radio repo with my fork's fix (cnb branch)
+replace_repo "https://github.com/missrais/android_vendor_qcom_opensource_fm-commonsys.git" "cnb" "vendor/qcom/opensource/commonsys/fm"
+
 # Patch Qualcomm audio HAL: prevent combo device (speaker-and-headphones) flapping on incoming calls
 echo "Applying Qualcomm audio HAL combo device flapping fix..."
 python3 - << 'EOF'
