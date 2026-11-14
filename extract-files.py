@@ -17,6 +17,31 @@ namespace_imports = [
     'vendor/motorola/sm6375-common',
 ]
 
+def thermal_engine_fixup(cpu_rules=None):
+    # The 6.1 base DT registers the charger ADC channel as chg-skin-therm,
+    # so Moto's chg_therm zone never appears. thermal-engine-v2 also reads
+    # one offset per input sensor without bounds checks, so give the
+    # three-sensor FRONT_TEMP and BACK_TEMP an offset for each sensor.
+    # The v2 engine names its CPU frequency devices cpu-cluster%d, so the
+    # v1-era cpu0 and cpu6 actions match nothing and both CPU rules get
+    # rejected.
+    fixup = (
+        blob_fixup()
+        .regex_replace(r'\bchg_therm\b', 'chg-skin-therm')
+        .regex_replace(r'(?ms)(^\[(?:FRONT|BACK)_TEMP\][^\[]*?^offsets[ \t]+)0(?=\r?$)', r'\g<1>0 0 0')
+        .regex_replace(r'\bcpu0\b', 'cpu-cluster0')
+        .regex_replace(r'\bcpu6\b', 'cpu-cluster1')
+    )
+    # Start CPU mitigation later on the BACK_TEMP skin estimate. Each rule
+    # keeps its frequency steps, down to the same final floor.
+    for section, (thresholds, clear) in (cpu_rules or {}).items():
+        for key, values in (('thresholds', thresholds), ('thresholds_clr', clear)):
+            fixup.regex_replace(
+                rf'(?ms)(^\[{section}\][^\[]*?^{key}[ \t]+)[^\r\n]*',
+                r'\g<1>' + ' '.join(str(value) for value in values))
+    return fixup
+
+
 blob_fixups: blob_fixups_user_type = {
     (
         'vendor/bin/hw/android.hardware.biometrics.fingerprint@2.1-service-fpc',
@@ -40,16 +65,19 @@ blob_fixups: blob_fixups_user_type = {
     # The v2 engine names its CPU frequency devices cpu-cluster%d, so the
     # v1-era cpu0 and cpu6 actions match nothing and both CPU rules get
     # rejected.
-    (
-        'vendor/etc/thermal-engine-fogos.conf',
-        'vendor/etc/thermal-engine-fogos-camera.conf',
-        'vendor/etc/thermal-engine-fogos-game-normal.conf',
-        'vendor/etc/thermal-engine-fogos-game-perf.conf',
-    ): blob_fixup()
-        .regex_replace(r'\bchg_therm\b', 'chg-skin-therm')
-        .regex_replace(r'(?ms)(^\[(?:FRONT|BACK)_TEMP\][^\[]*?^offsets[ \t]+)0(?=\r?$)', r'\g<1>0 0 0')
-        .regex_replace(r'\bcpu0\b', 'cpu-cluster0')
-        .regex_replace(r'\bcpu6\b', 'cpu-cluster1'),
+    'vendor/etc/thermal-engine-fogos.conf': thermal_engine_fixup({
+        'MON-MSM-CPU0': ((44000, 45500, 46500, 47500, 48500), (43000, 44500, 45500, 46500, 47500)),
+        'MON-MSM-CPU6': ((44000, 45500, 47000, 48500, 49000), (43000, 44500, 46000, 47500, 48500)),
+    }),
+    'vendor/etc/thermal-engine-fogos-camera.conf': thermal_engine_fixup({
+        'MON-MSM-CPU0': ((40000, 42000, 44000, 46000, 48000), (38000, 40000, 42000, 44000, 46000)),
+        'MON-MSM-CPU6': ((40000, 42000, 44000, 46000, 48000), (38000, 40000, 42000, 44000, 46000)),
+    }),
+    'vendor/etc/thermal-engine-fogos-game-normal.conf': thermal_engine_fixup({
+        'MON-MSM-CPU0': ((43000, 45000, 46500, 47500, 48500), (42000, 44000, 45500, 46500, 47500)),
+        'MON-MSM-CPU6': ((43000, 45000, 46500, 48000), (42000, 44000, 45500, 47000)),
+    }),
+    'vendor/etc/thermal-engine-fogos-game-perf.conf': thermal_engine_fixup(),
 }  # fmt: skip
 
 module = ExtractUtilsModule(
