@@ -6,7 +6,6 @@
 on late-init
     exec u:r:vendor_modprobe:s0 -- /vendor/bin/modprobe -a -d /vendor/lib/modules mmi-smbcharger-iio
 
-
 on fs
     exec_background u:r:vendor_modprobe:s0 -- /vendor/bin/modprobe -a -d /vendor/lib/modules chipone_tddi_v2_mmi ilitek_v3_mmi
     #zram wb
@@ -22,7 +21,6 @@ on post-fs
 on post-fs
    chown system system /sys/devices/platform/soc/4804000.ufshc/clkgate_enable
    chown system system /sys/devices/platform/soc/4804000.ufshc/devfreq/4804000.ufshc/min_freq
-   start vendor.copy_qc_cert
 
 on early-boot
     chown system system /dev/goodix_fp
@@ -138,16 +136,6 @@ on boot
     chmod 0660 /sys/class/capsense/fw_download_status
     chmod 0660 /sys/class/capsense/mode
 
-service vendor.netconfig /vendor/bin/vendor_netconfig
-    class main
-    user root
-    group root system
-    oneshot
-    disabled
-
-on boot && property:ro.bootmode=mot-factory
-    start vendor.netconfig
-
 on early-boot
     # allow TCMD to access cci
     chown system camera /dev/cci_intf
@@ -185,13 +173,6 @@ on property:sys.boot_completed=1
     chmod 0666 /sys/class/power_supply/mmi_battery/device/force_chg_auto_enable
     chmod 0666 /sys/class/power_supply/mmi_battery/device/force_chg_fail_clear
     chmod 0666 /sys/class/power_supply/bq25960-standalone/device/force_chg_auto_enable
-
-service vendor.copy_qc_cert /vendor/bin/copy_qc_cert.sh
-    class main
-    user system
-    group root system
-    oneshot
-    disabled
 
 service vendor.modem-rfs-sh /vendor/bin/init.mmi.modem-rfs.sh loop_forever
    class late_start
