@@ -1,0 +1,32 @@
+diff --git a/aidl/touch/Android.bp b/aidl/touch/Android.bp
+index 76db9fc2a695d914513581e54dd32632de34b6e2..dec11e8dabc2e7a0bda613d4a026a0e3b00105ba 100644
+--- a/aidl/touch/Android.bp
++++ b/aidl/touch/Android.bp
+@@ -5,6 +5,11 @@
+ 
+ cc_binary {
+     name: "vendor.lineage.touch-service.motorola",
++    // The only interface implemented here requires a polling-rate control.
++    enabled: select(soong_config_variable("MOTOROLA_TOUCH", "HIGH_TOUCH_POLLING_PATH"), {
++        any: true,
++        default: false,
++    }),
+     init_rc: ["vendor.lineage.touch-service.motorola.rc"],
+     vintf_fragments: select(soong_config_variable("MOTOROLA_TOUCH", "HIGH_TOUCH_POLLING_PATH"), {
+         any: ["vendor.lineage.touch-service.motorola-htpr.xml"],
+diff --git a/overlay/Android.bp b/overlay/Android.bp
+index 81c890ad3721efdf0f4bf9066b0e85423b966c8e..f0628c096c7a9a9f04af20c8482c14f9a98dbbd8 100644
+--- a/overlay/Android.bp
++++ b/overlay/Android.bp
+@@ -9,11 +9,3 @@ phony {
+         "FrameworksResMotoCommon",
+     ]
+ }
+-
+-phony {
+-    name: "MotoEuicc",
+-    required: [
+-        "EuiccPolicy",
+-        "EuiccPolicyMoto",
+-    ]
+-}

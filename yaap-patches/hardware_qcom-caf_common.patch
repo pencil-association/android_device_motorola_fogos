@@ -1,0 +1,129 @@
+diff --git a/Android.bp b/Android.bp
+index 2c61b1c325bf7048083dc4c6164f17e00fa1928e..fbd380693c2ce939b2d6cfa5e57c361d5587308b 100644
+--- a/Android.bp
++++ b/Android.bp
+@@ -3,34 +3,59 @@
+ // SPDX-License-Identifier: Apache-2.0
+ //
+ 
++// Select the exported UAPI archive when the kernel is built outside Android.
++soong_config_module_type {
++    name: "qti_kernel_header_defaults_type",
++    module_type: "cc_defaults",
++    config_namespace: "qcom_kernel",
++    bool_variables: ["use_prebuilt_headers"],
++    properties: ["generated_headers", "export_generated_headers"],
++}
++
++qti_kernel_header_defaults_type {
++    name: "qti_kernel_header_defaults",
++    soong_config_variables: {
++        use_prebuilt_headers: {
++            generated_headers: ["prebuilt_kernel_includes"],
++            export_generated_headers: ["prebuilt_kernel_includes"],
++            conditions_default: {
++                generated_headers: ["generated_kernel_includes"],
++                export_generated_headers: ["generated_kernel_includes"],
++            },
++        },
++    },
++    vendor_available: true,
++    recovery_available: true,
++}
++
+ cc_library_headers {
+     name: "audio_kernel_headers",
+-    defaults: ["generated_kernel_header_defaults"],
++    defaults: ["qti_kernel_header_defaults"],
+ }
+ 
+ cc_library_headers {
+     name: "qti_audio_kernel_uapi",
+-    defaults: ["generated_kernel_header_defaults"],
++    defaults: ["qti_kernel_header_defaults"],
+ }
+ 
+ cc_library_headers {
+     name: "qti_display_kernel_headers",
+-    defaults: ["generated_kernel_header_defaults"],
++    defaults: ["qti_kernel_header_defaults"],
+ }
+ 
+ cc_library_headers {
+     name: "qti_ipa_kernel_headers",
+-    defaults: ["generated_kernel_header_defaults"],
++    defaults: ["qti_kernel_header_defaults"],
+ }
+ 
+ cc_library_headers {
+     name: "qti_kernel_headers",
+-    defaults: ["generated_kernel_header_defaults"],
++    defaults: ["qti_kernel_header_defaults"],
+ }
+ 
+ cc_library_headers {
+     name: "smmu_proxy_uapi_header",
+-    defaults: ["generated_kernel_header_defaults"],
++    defaults: ["qti_kernel_header_defaults"],
+ }
+ 
+ soong_config_module_type {
+@@ -698,3 +723,13 @@ prebuilt_hidl_interfaces {
+         "vendor.qti.hardware.wigig.netperftuner@1.0::INetPerfTuner",
+     ],
+ }
++
++// The SM6375 AudioReach checkout uses this defaults module for its
++// shared extensions, including the listener used by the legacy HAL.
++cc_defaults {
++    name: "android_hardware_qtiaudio_config_defaults",
++    cflags: select(soong_config_variable("qtiaudio", "feature_instance_id"), {
++        "true": ["-DINSTANCE_ID_ENABLED"],
++        default: [],
++    }),
++}
+diff --git a/BoardConfigQcom.mk b/BoardConfigQcom.mk
+index 22f90f0bc4127f3d2e6019869f2feb6ad69667a8..d0846a9f4093647b6d0a05df351c0805e3232380 100644
+--- a/BoardConfigQcom.mk
++++ b/BoardConfigQcom.mk
+@@ -272,7 +272,7 @@ ifeq ($(filter $(UM_PLATFORMS),$(TARGET_BOARD_PLATFORM)),)
+ endif
+ 
+ # Enable smmu proxy on UM platforms that support it
+-ifneq ($(filter $(UM_6_1_FAMILY),$(TARGET_BOARD_PLATFORM)),)
++ifneq ($(filter-out blair,$(filter $(UM_6_1_FAMILY),$(TARGET_BOARD_PLATFORM))),)
+     SOONG_CONFIG_qtidisplay_smmu_proxy := true
+ endif
+ 
+@@ -358,7 +358,11 @@ else ifneq ($(filter $(UM_5_10_FAMILY),$(TARGET_BOARD_PLATFORM)),)
+ else ifneq ($(filter $(UM_5_15_FAMILY),$(TARGET_BOARD_PLATFORM)),)
+     QCOM_HARDWARE_VARIANT := sm8550
+ else ifneq ($(filter $(UM_6_1_FAMILY),$(TARGET_BOARD_PLATFORM)),)
+-    QCOM_HARDWARE_VARIANT := sm8650
++    ifeq ($(TARGET_BOARD_PLATFORM),blair)
++        QCOM_HARDWARE_VARIANT := sm6375-6.1
++    else
++        QCOM_HARDWARE_VARIANT := sm8650
++    endif
+ else
+     MSM_VIDC_TARGET_LIST := $(TARGET_BOARD_PLATFORM)
+     QCOM_HARDWARE_VARIANT := $(TARGET_BOARD_PLATFORM)
+diff --git a/qcom_boards.mk b/qcom_boards.mk
+index 84dcf670bd58ac22277b6f6eedb68a40a7054e12..30cae35e7d0007d4455cf59b2f0b9ff4d5fe07fc 100644
+--- a/qcom_boards.mk
++++ b/qcom_boards.mk
+@@ -39,3 +39,4 @@ QCOM_BOARD_PLATFORMS += crow
+ 
+ # UM 6.1
+ QCOM_BOARD_PLATFORMS += pineapple
++QCOM_BOARD_PLATFORMS += blair
+diff --git a/qcom_defs.mk b/qcom_defs.mk
+index e33a4e426690942996ac7972b7d40106506b39db..e2ffcbc438b244cf4e26c03c4bd8562c9d384f89 100644
+--- a/qcom_defs.mk
++++ b/qcom_defs.mk
+@@ -11,4 +11,4 @@ UM_4_19_FAMILY := kona lito bengal
+ UM_5_4_FAMILY := lahaina holi
+ UM_5_10_FAMILY := taro parrot
+ UM_5_15_FAMILY := kalama crow
+-UM_6_1_FAMILY := pineapple
++UM_6_1_FAMILY := pineapple blair

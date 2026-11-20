@@ -1,0 +1,65 @@
+diff --git a/android/config.go b/android/config.go
+index 6d587697310e029fddb44dccd580d4bf069816f2..ccbf37c9f125c5f0a9eb2101a1ed2634b5ffaa46 100644
+--- a/android/config.go
++++ b/android/config.go
+@@ -2520,7 +2520,7 @@ func (c *config) ApexBootJars() ConfiguredJarList {
+ }
+ 
+ func (c *config) RBEWrapper() string {
+-	return c.GetenvWithDefault("RBE_WRAPPER", remoteexec.DefaultWrapperPath)
++	return c.GetenvWithDefault("RBE_WRAPPER", remoteexec.DefaultWrapperPath+" -canonicalize_working_dir")
+ }
+ 
+ // UseHostMusl returns true if the host target has been configured to build against musl libc.
+diff --git a/docs/rbe.json b/docs/rbe.json
+index f6ff107726e00056663ada9deee965e0cf7ec239..964dbda47821fe7a87041b9975a5d078302d6880 100644
+--- a/docs/rbe.json
++++ b/docs/rbe.json
+@@ -13,7 +13,7 @@
+         "RBE_instance": "[replace with your RBE instance]",
+         "RBE_service": "[replace with your RBE service endpoint]",
+ 
+-        "RBE_DIR": "prebuilts/remoteexecution-client/live",
++        "RBE_DIR": "prebuilts/remoteexecution-client/buildbuddyfix",
+ 
+         "RBE_use_application_default_credentials": "true",
+ 
+diff --git a/remoteexec/remoteexec.go b/remoteexec/remoteexec.go
+index 8294c3fa36596ff3c1852e7005af469d5f279f08..e8855abce71b5e3efd96c41cab551e41a6976f16 100644
+--- a/remoteexec/remoteexec.go
++++ b/remoteexec/remoteexec.go
+@@ -33,7 +33,7 @@ const (
+ 	DefaultImage = "docker://gcr.io/androidbuild-re-dockerimage/android-build-remoteexec-image@sha256:1eb7f64b9e17102b970bd7a1af7daaebdb01c3fb777715899ef462d6c6d01a45"
+ 
+ 	// DefaultWrapperPath is the default path to the remote execution wrapper.
+-	DefaultWrapperPath = "prebuilts/remoteexecution-client/live/rewrapper"
++	DefaultWrapperPath = "prebuilts/remoteexecution-client/buildbuddyfix/rewrapper"
+ 
+ 	// DefaultPool is the name of the pool to use for remote execution when none is specified.
+ 	DefaultPool = "default"
+diff --git a/remoteexec/remoteexec_test.go b/remoteexec/remoteexec_test.go
+index 368631609f101cf051fe2b288f8386130b532a8f..ec114d1964434b40c76e6d4dc42ea697989cab17 100644
+--- a/remoteexec/remoteexec_test.go
++++ b/remoteexec/remoteexec_test.go
+@@ -74,7 +74,7 @@ func TestNoVarTemplate(t *testing.T) {
+ 			PoolKey:           "default",
+ 		},
+ 	}
+-	want := fmt.Sprintf("prebuilts/remoteexecution-client/live/rewrapper --labels=compiler=clang,lang=cpp,type=compile --platform=\"Pool=default,container-image=%s\" --exec_strategy=local --inputs=$in --output_files=$out --env_var_allowlist=LANG,LC_MESSAGES,PYTHONDONTWRITEBYTECODE -- ", DefaultImage)
++	want := fmt.Sprintf("prebuilts/remoteexecution-client/buildbuddyfix/rewrapper --labels=compiler=clang,lang=cpp,type=compile --platform=\"Pool=default,container-image=%s\" --exec_strategy=local --inputs=$in --output_files=$out --env_var_allowlist=LANG,LC_MESSAGES,PYTHONDONTWRITEBYTECODE -- ", DefaultImage)
+ 	if got := params.NoVarTemplate(DefaultWrapperPath); got != want {
+ 		t.Errorf("NoVarTemplate() returned\n%s\nwant\n%s", got, want)
+ 	}
+diff --git a/ui/build/config.go b/ui/build/config.go
+index 1c1990a7efdebe11005bd122c502c6c13179a916..c9ce3a03455ec90c08b540094534724f533869c8 100644
+--- a/ui/build/config.go
++++ b/ui/build/config.go
+@@ -1793,7 +1793,7 @@ func (c *configImpl) rbeDir() string {
+ 	if v, ok := c.environ.Get("RBE_DIR"); ok {
+ 		return v
+ 	}
+-	return "prebuilts/remoteexecution-client/live/"
++	return "prebuilts/remoteexecution-client/buildbuddyfix/"
+ }
+ 
+ func (c *configImpl) rbeReproxy() string {

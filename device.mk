@@ -22,6 +22,9 @@ PRODUCT_SHIPPING_API_LEVEL := 33
 # Motorola Framework
 $(call inherit-product, $(LOCAL_PATH)/moto-framework/moto-framework.mk)
 
+# Moto Camera app
+$(call inherit-product-if-exists, vendor/motorola/camera/camera.mk)
+
 # Permissions
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.telephony.euicc.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/permissions/android.hardware.telephony.euicc.xml

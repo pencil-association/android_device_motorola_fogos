@@ -1,0 +1,34 @@
+diff --git a/build/soong/Android.bp b/build/soong/Android.bp
+index 7a312e4a7a5bfea76a589228b9ebadf8d3db921e..92deb7f8d0818b4e66086536ca3723431638e659 100644
+--- a/build/soong/Android.bp
++++ b/build/soong/Android.bp
+@@ -78,10 +78,26 @@ bootstrap_go_package {
+     pluginFor: ["soong_build"],
+ }
+ 
+-cc_defaults {
++soong_config_module_type {
++    name: "yaap_kernel_header_defaults",
++    module_type: "cc_defaults",
++    config_namespace: "qcom_kernel",
++    bool_variables: ["use_prebuilt_headers"],
++    properties: ["generated_headers", "export_generated_headers"],
++}
++
++yaap_kernel_header_defaults {
+     name: "generated_kernel_header_defaults",
+-    generated_headers: ["generated_kernel_includes"],
+-    export_generated_headers: ["generated_kernel_includes"],
++    soong_config_variables: {
++        use_prebuilt_headers: {
++            generated_headers: ["prebuilt_kernel_includes"],
++            export_generated_headers: ["prebuilt_kernel_includes"],
++            conditions_default: {
++                generated_headers: ["generated_kernel_includes"],
++                export_generated_headers: ["generated_kernel_includes"],
++            },
++        },
++    },
+     vendor_available: true,
+     recovery_available: true,
+ }

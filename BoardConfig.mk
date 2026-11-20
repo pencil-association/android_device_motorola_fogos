@@ -2,6 +2,13 @@
 
 DEVICE_PATH := device/motorola/fogos
 
+# Product needs less unused space when Google apps are already included.
+ifeq ($(TARGET_BUILD_GAPPS),true)
+BOARD_PRODUCTIMAGE_PARTITION_RESERVED_SIZE ?= 67108864
+else ifneq ($(WITH_GMS),true)
+BOARD_PRODUCTIMAGE_PARTITION_RESERVED_SIZE ?= 1342177280
+endif
+
 include device/motorola/sm6375-common/BoardConfigCommon.mk
 
 # Bootloader

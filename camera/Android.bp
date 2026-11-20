@@ -10,3 +10,14 @@ cc_library_static {
         "frameworks/av/services/camera/libcameraservice/common"
     ],
 }
+
+cc_library_shared {
+    name: "libgui_buffer_shim_vendor",
+    vendor: true,
+    compile_multilib: "64",
+    srcs: ["GuiBufferShim.cpp"],
+    shared_libs: [
+        "libgui_vendor",
+        "libutils",
+    ],
+}

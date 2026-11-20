@@ -1,0 +1,15 @@
+diff --git a/Android.bp b/Android.bp
+index 7438fceb6362737b2070bfd4cb98433b5a6fed89..7eae6e053c3145f7f8a3105465addc6ed9eaf2d4 100644
+--- a/Android.bp
++++ b/Android.bp
+@@ -306,8 +306,10 @@ cc_library_shared {
+     },
+     shared_libs: [
+         "libbase",
++        "libfs_mgr",
+         "liblog",
+         "librecovery_ui",
++        "libselinux",
+     ],
+     // TARGET_RECOVERY_UI_LIB should be one of librecovery_ui_{default,wear,vr,ethernet} or a
+     // device-specific module that defines make_device() and the exact RecoveryUI class for the

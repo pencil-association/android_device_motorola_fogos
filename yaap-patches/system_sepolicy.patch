@@ -1,0 +1,58 @@
+diff --git a/private/attributes b/private/attributes
+index e8e004c476ef3bcbc58bade2ad5a1e4ee4cdfc1f..d0c07e0e591bb70a0aa58f2262231827731ac489 100644
+--- a/private/attributes
++++ b/private/attributes
+@@ -18,9 +18,6 @@ attribute sdk_sandbox_current;
+ # Common to adbd and adbd_tradeinmode.
+ attribute adbd_common;
+ 
+-# All types used for sdcard_posix context= mounts.
+-attribute sdcard_posix_contextmount_type;
+-
+ # Provides access to platform update services.
+ # WARNING: USING THE update_provider ATTRIBUTE WILL CAUSE CTS TO FAIL!
+ attribute update_provider;
+diff --git a/private/domain.te b/private/domain.te
+index c0ba37c6d77d8a7b4a5c1dc53d67d151dbbc8153..31e809c3f6f8a70c49665d99eca2f6882f544fc4 100644
+--- a/private/domain.te
++++ b/private/domain.te
+@@ -2420,8 +2420,10 @@ neverallow domain *:system x509_certificate_load;
+ # generates SELinux denials prior to being stopped by other parts of
+ # the kernel. Disallow such nonsensical allow rules
+ neverallow domain proc:filesystem associate;
+-neverallow { domain -init_dir_mutation_exempt } domain:dir { write add_name remove_name };
+-neverallow init_dir_mutation_exempt { domain -init }:dir {write add_name remove_name};
++neverallow { domain userdebug_or_eng(`-init_dir_mutation_exempt') } domain:dir { write add_name remove_name };
++userdebug_or_eng(`
++    neverallow init_dir_mutation_exempt { domain -init }:dir { write add_name remove_name };
++')
+ neverallow domain domain:file create;
+ 
+ # Only NPU manager, which runs inside of system_server, should be able
+diff --git a/public/attributes b/public/attributes
+index 5fbdfd9eea166aa891f5f386e5e074a220d66faf..4e3941987bb0114c45baad05d77f44d6240859d1 100644
+--- a/public/attributes
++++ b/public/attributes
+@@ -27,6 +27,9 @@ attribute contextmount_type;
+ # example.
+ attribute fusefs_type;
+ 
++# All types used for sdcard_posix context= mounts.
++attribute sdcard_posix_contextmount_type;
++
+ # All types used for files that can exist on a labeled fs.
+ # Do not use for pseudo file types.
+ # On change, update CHECK_FC_ASSERT_ATTRS
+@@ -61,8 +64,10 @@ attribute vendor_file_type;
+ attribute proc_type;
+ expandattribute proc_type false;
+ 
+-# Allowlisted domains that may violate the domain:dir restrictions on init
+-attribute init_dir_mutation_exempt;
++# Allowlisted debug domains that may write to init directories.
++userdebug_or_eng(`
++    attribute init_dir_mutation_exempt;
++')
+ 
+ # Types in /proc/net, excluding qtaguid types.
+ # TODO(b/9496886) Lock down access to /proc/net.

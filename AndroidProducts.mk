@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
-PRODUCT_MAKEFILES := $(LOCAL_DIR)/lineage_fogos.mk
+PRODUCT_MAKEFILES := $(LOCAL_DIR)/yaap_fogos.mk
 
-COMMON_LUNCH_CHOICES := lineage_fogos-cp2a-userdebug
+COMMON_LUNCH_CHOICES := yaap_fogos-cp2a-userdebug

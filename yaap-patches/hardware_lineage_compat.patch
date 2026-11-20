@@ -1,0 +1,80 @@
+diff --git a/libgui/SurfaceComposerClient.cpp b/libgui/SurfaceComposerClient.cpp
+index 6930ed6f0f755ffa94392a61768d2e3eba1cba32..4e7882835d9fab8b8aa5202184c81416c8e4e94a 100644
+--- a/libgui/SurfaceComposerClient.cpp
++++ b/libgui/SurfaceComposerClient.cpp
+@@ -4,7 +4,8 @@
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+-#include <utils/Errors.h>
++#include <gui/SurfaceComposerClient.h>
++#include <utils/String8.h>
+ 
+ using android::status_t;
+ 
+@@ -12,13 +13,6 @@ extern "C" status_t _ZN7android21SurfaceComposerClient11Transaction5applyEbb(voi
+                                                                              bool synchronous,
+                                                                              bool oneWay);
+ 
+-extern "C" void*
+-_ZN7android21SurfaceComposerClient20createVirtualDisplayERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEEbbS9_f(
+-        void* displayName, bool isSecure, bool optimizeForPower, void* uniqueId,
+-        float requestedRefreshRate);
+-
+-extern "C" void* _ZN7android21SurfaceComposerClient6kEmptyE;
+-
+ extern "C" void _ZN7android21SurfaceComposerClient21destroyVirtualDisplayERKNS_2spINS_7IBinderEEE(
+         void* displayToken);
+ 
+@@ -27,11 +21,14 @@ extern "C" status_t _ZN7android21SurfaceComposerClient11Transaction5applyEb(void
+     return _ZN7android21SurfaceComposerClient11Transaction5applyEbb(thisptr, synchronous, false);
+ }
+ 
+-extern "C" void* _ZN7android21SurfaceComposerClient13createDisplayERKNS_7String8Ebf(
+-        void* displayName, bool isSecure, float requestedRefreshRate) {
+-    return _ZN7android21SurfaceComposerClient20createVirtualDisplayERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEEbbS9_f(
+-            displayName, isSecure, true, _ZN7android21SurfaceComposerClient6kEmptyE,
+-            requestedRefreshRate);
++android::sp<android::IBinder> createLegacyDisplay(const android::String8&, bool, float)
++        asm("_ZN7android21SurfaceComposerClient13createDisplayERKNS_7String8Ebf");
++
++android::sp<android::IBinder> createLegacyDisplay(
++        const android::String8& displayName, bool isSecure, float requestedRefreshRate) {
++    return android::SurfaceComposerClient::createVirtualDisplay(
++            displayName.c_str(), isSecure, true, android::SurfaceComposerClient::kEmpty,
++            android::gui::Uid::INVALID.val(), requestedRefreshRate);
+ }
+ 
+ extern "C" void _ZN7android21SurfaceComposerClient14destroyDisplayERKNS_2spINS_7IBinderEEE(
+@@ -39,11 +36,26 @@ extern "C" void _ZN7android21SurfaceComposerClient14destroyDisplayERKNS_2spINS_7
+     _ZN7android21SurfaceComposerClient21destroyVirtualDisplayERKNS_2spINS_7IBinderEEE(displayToken);
+ }
+ 
+-extern "C" void*
+-_ZN7android21SurfaceComposerClient20createVirtualDisplayERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEEbS9_f(
+-        void* displayName, bool isSecure, void* uniqueId, float requestedRefreshRate) {
+-    return _ZN7android21SurfaceComposerClient20createVirtualDisplayERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEEbbS9_f(
+-            displayName, isSecure, true, uniqueId, requestedRefreshRate);
++android::sp<android::IBinder> createLegacyVirtualDisplay(
++        const std::string&, bool, bool, const std::string&, float)
++        asm("_ZN7android21SurfaceComposerClient20createVirtualDisplayERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEEbbS9_f");
++
++android::sp<android::IBinder> createLegacyVirtualDisplay(
++        const std::string& displayName, bool isSecure, bool optimizeForPower,
++        const std::string& uniqueId, float requestedRefreshRate) {
++    return android::SurfaceComposerClient::createVirtualDisplay(
++            displayName, isSecure, optimizeForPower, uniqueId, android::gui::Uid::INVALID.val(),
++            requestedRefreshRate);
++}
++
++android::sp<android::IBinder> createLegacyVirtualDisplay(
++        const std::string&, bool, const std::string&, float)
++        asm("_ZN7android21SurfaceComposerClient20createVirtualDisplayERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEEbS9_f");
++
++android::sp<android::IBinder> createLegacyVirtualDisplay(
++        const std::string& displayName, bool isSecure, const std::string& uniqueId,
++        float requestedRefreshRate) {
++    return createLegacyVirtualDisplay(displayName, isSecure, true, uniqueId, requestedRefreshRate);
+ }
+ 
+ extern "C" void* _ZTVN7android21SurfaceComposerClient11TransactionE = nullptr;
