@@ -3,9 +3,9 @@
 $(call inherit-product, $(SRC_TARGET_DIR)/product/core_64_bit_only.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
 $(call inherit-product, device/motorola/fogos/device.mk)
-$(call inherit-product, vendor/halcyon/config/common.mk)
+$(call inherit-product, vendor/voltage/config/common.mk)
 
-PRODUCT_NAME := halcyon_fogos
+PRODUCT_NAME := voltage_fogos
 PRODUCT_DEVICE := fogos
 PRODUCT_MANUFACTURER := motorola
 PRODUCT_BRAND := motorola
