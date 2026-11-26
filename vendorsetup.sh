@@ -31,26 +31,37 @@ sync_repo() {
         (
             cd "$target_dir" || exit
             if [ -n "$branch" ]; then
-                git fetch "$repo_url" "$branch"
-                git reset --hard FETCH_HEAD
+                git fetch "$repo_url" "$branch" && git reset --hard FETCH_HEAD
             fi
         )
         echo "Done."
     fi
 }
 
-# Removes an existing repo checkout (e.g. one brought in by repo sync/manifest)
-# and clones a replacement in its place.
+# Keep the existing checkout until the replacement is ready.
 replace_repo() {
     local repo_url=$1
     local branch=$2
     local target_dir=$3
+    local staging_dir
+    staging_dir=$(mktemp -d "${target_dir}.setup.XXXXXX") || return 1
 
-    echo "Removing $target_dir..."
-    rm -rf "$target_dir"
-
-    echo "Cloning $target_dir from $repo_url ($branch)..."
-    git clone "$repo_url" -b "$branch" "$target_dir"
+    echo "Preparing $target_dir from $repo_url ($branch)..."
+    if ! git clone --branch "$branch" "$repo_url" "$staging_dir/replacement"; then
+        rm -rf -- "$staging_dir"
+        return 1
+    fi
+    if [ -e "$target_dir" ] || [ -L "$target_dir" ]; then
+        mv -- "$target_dir" "$staging_dir/previous" || return 1
+    fi
+    if ! mv -T -- "$staging_dir/replacement" "$target_dir"; then
+        if [ -e "$staging_dir/previous" ] || [ -L "$staging_dir/previous" ]; then
+            mv -T -- "$staging_dir/previous" "$target_dir" || return 1
+        fi
+        rm -rf -- "$staging_dir"
+        return 1
+    fi
+    rm -rf -- "$staging_dir"
     echo "Done."
 }
 
@@ -99,7 +110,8 @@ if [ -d "$(gettop)/vendor/voltage" ]; then
 fi
 
 # Replace upstream LineageOS FM radio repo with my fork's fix (cnb branch)
-replace_repo "https://github.com/missrais/android_vendor_qcom_opensource_fm-commonsys.git" "cnb" "vendor/qcom/opensource/commonsys/fm"
+replace_repo "https://github.com/missrais/android_vendor_qcom_opensource_fm-commonsys.git" "cnb" \
+    "vendor/qcom/opensource/commonsys/fm" || echo "WARNING: FM radio checkout replacement failed" >&2
 
 # Patch Qualcomm audio HAL:
 #   1. keep the combo device (speaker + headphones) from flapping on incoming calls
@@ -143,7 +155,12 @@ static inline bool is_speaker_snd_dev(snd_device_t d) {
             d == SND_DEVICE_OUT_SPEAKER_REVERSE);
 }
 """
-HELPERS_ANCHOR = re.compile(r"(\bsnd_device_t\s+derive_playback_snd_device\b)")
+DERIVE_DECL = r"snd_device_t[ \t]+derive_playback_snd_device\b"
+HELPERS_ANCHOR = re.compile(r"^((?:static\s+)?" + DERIVE_DECL + r")", re.M)
+STALE_STATIC = re.compile(
+    r"^static[ \t]*\n(" + re.escape(HELPERS.lstrip("\n") + "\n") + r")(?=" + DERIVE_DECL + r")",
+    re.M,
+)
 
 # Case when platform_split_snd_device fails (< 0): SM6375 / shared WCD codec backends
 # cannot split speaker-and-headphones into 2 backends, so keep the combo device
@@ -257,6 +274,7 @@ def patch_audio_hw(fpath):
     orig = content
 
     if has_combo_vars(content):
+        content = STALE_STATIC.sub(r"\1static ", content)
         if not re.search(r"\bis_headphones_snd_dev\b", content):
             content = HELPERS_ANCHOR.sub(HELPERS + r"\n\1", content, count=1)
         content = COMBO_P1.sub(COMBO_REPL, content)
