@@ -90,3 +90,6 @@ $(foreach f,$(wildcard $(LOCAL_PATH)/rootdir/bin/*.sh), \
     $(eval PRODUCT_COPY_FILES += $(f):$(TARGET_COPY_OUT_VENDOR)/bin/$(notdir $f)))
 
 $(call inherit-product, vendor/motorola/fogos/fogos-vendor.mk)
+
+# VoltageOS
+DEVICE_PACKAGE_OVERLAYS += device/motorola/fogos/overlay-voltage
